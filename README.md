@@ -1,6 +1,9 @@
-run the following code for package dependencies
+_🔧 Run the following command to install required dependencies:_
 
+```bash
 pip install -r requirements.txt
+```
+
 
 # 📚 Unsupervised Author Text Analysis
 
