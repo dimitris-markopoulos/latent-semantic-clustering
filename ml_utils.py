@@ -1,7 +1,9 @@
 import pandas as pd
 import numpy as np
-from sklearn.metrics import silhouette_samples, silhouette_score
 import matplotlib.pyplot as plt
+from sklearn.metrics import silhouette_samples, silhouette_score
+from sklearn.cluster import AgglomerativeClustering, SpectralClustering
+from sklearn.mixture import GaussianMixture
 
 class ClusterEvaluator:
     def __init__(self, pred_clusters, true_labels):
@@ -44,3 +46,12 @@ class SilhouetteEvaluator:
         ax.set_xlabel("Number of Clusters (K)")
         ax.set_ylabel("Silhouette Score")
         ax.legend()
+
+def make_hierarchical(linkage, metric):
+    return lambda n_clusters: AgglomerativeClustering(n_clusters=n_clusters, linkage=linkage, metric=metric)
+
+def make_gmm(**kwargs):
+    return lambda n_clusters: GaussianMixture(n_components=n_clusters, **kwargs)
+
+def make_spectral(**kwargs):
+    return lambda n_clusters: SpectralClustering(n_clusters=n_clusters, **kwargs)
