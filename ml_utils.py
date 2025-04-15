@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 from sklearn.metrics import silhouette_samples, silhouette_score
 from sklearn.cluster import AgglomerativeClustering, SpectralClustering
 from sklearn.mixture import GaussianMixture
+from scipy.stats import multivariate_normal
 
 class ClusterEvaluator:
     def __init__(self, pred_clusters, true_labels):
@@ -55,3 +56,59 @@ def make_gmm(**kwargs):
 
 def make_spectral(**kwargs):
     return lambda n_clusters: SpectralClustering(n_clusters=n_clusters, **kwargs)
+
+class GaussianMixtureEM:
+    def __init__(self, K, num_iterations, allow_singular=True):
+        self.K = K
+        self.num_iterations = num_iterations
+        self.allow_singular = allow_singular
+
+    def fit(self, X):
+        epsilon = 1e-6  # regularization constant
+        X_array = X.to_numpy()
+        n_rows, n_cols = X.shape
+
+        # Initialization
+        means = X.sample(n=self.K).to_numpy()
+        shared_cov = np.cov(X_array, rowvar=False, ddof=1)
+        cov = [shared_cov.copy() for _ in range(self.K)]
+        pis = [1 / self.K] * self.K
+        gamma = np.zeros((n_rows, self.K))
+
+        pis_dict = {'Initial': [pis.copy()]}
+        pis_dict.update({f'Iteration_{i}': [] for i in range(self.num_iterations)})
+
+        for iter in range(self.num_iterations):
+            # E-step
+            for i in range(n_rows):
+                xi = X.iloc[i].values
+                denom = 0
+                for k in range(self.K):
+                    numerator = pis[k] * multivariate_normal.pdf(
+                        xi, mean=means[k], cov=cov[k], allow_singular=self.allow_singular
+                    )
+                    gamma[i, k] = numerator
+                    denom += numerator
+                gamma[i, :] /= denom
+
+            # M-step
+            Nk = [np.sum(gamma[:, j]) for j in range(self.K)]
+
+            means = [
+                np.sum([gamma[i, k] * X_array[i, :] for i in range(n_rows)], axis=0) / Nk[k]
+                for k in range(self.K)
+            ]
+
+            cov = [
+                np.sum(
+                    [gamma[i, k] * np.outer(X_array[i, :] - means[k], X_array[i, :] - means[k])
+                     for i in range(n_rows)],
+                    axis=0
+                ) / Nk[k] + epsilon * np.eye(n_cols)
+                for k in range(self.K)
+            ]
+
+            pis = np.array(Nk) / n_rows
+            pis_dict[f'Iteration_{iter}'].append(pis.copy())
+
+        return {'pis_dict': pis_dict, 'Nk': Nk, 'means': means, 'cov': cov}
