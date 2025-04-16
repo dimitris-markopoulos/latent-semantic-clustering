@@ -63,12 +63,11 @@ class GaussianMixtureEM:
         self.num_iterations = num_iterations
         self.allow_singular = allow_singular
 
-    def fit(self, X):
-        epsilon = 1e-6  # regularization constant
+    def fit_slow(self, X):
+        epsilon = 1e-6
         X_array = X.to_numpy()
         n_rows, n_cols = X.shape
 
-        # Initialization
         means = X.sample(n=self.K).to_numpy()
         shared_cov = np.cov(X_array, rowvar=False, ddof=1)
         cov = [shared_cov.copy() for _ in range(self.K)]
@@ -84,31 +83,57 @@ class GaussianMixtureEM:
                 xi = X.iloc[i].values
                 denom = 0
                 for k in range(self.K):
-                    numerator = pis[k] * multivariate_normal.pdf(
-                        xi, mean=means[k], cov=cov[k], allow_singular=self.allow_singular
-                    )
+                    numerator = pis[k] * multivariate_normal.pdf(xi, mean=means[k], cov=cov[k], allow_singular=self.allow_singular)
                     gamma[i, k] = numerator
                     denom += numerator
                 gamma[i, :] /= denom
 
             # M-step
             Nk = [np.sum(gamma[:, j]) for j in range(self.K)]
+            means = [np.sum([gamma[i, k] * X_array[i, :] for i in range(n_rows)],axis=0) / Nk[k] for k in range(self.K)]
+            cov = [np.sum([gamma[i, k] * np.outer(X_array[i, :] - means[k], X_array[i, :] - means[k]) for i in range(n_rows)],axis=0) / Nk[k] + epsilon * np.eye(n_cols) for k in range(self.K)]
+            pis = np.array(Nk) / n_rows
+            pis_dict[f'Iteration_{iter}'].append(pis.copy())
 
-            means = [
-                np.sum([gamma[i, k] * X_array[i, :] for i in range(n_rows)], axis=0) / Nk[k]
-                for k in range(self.K)
-            ]
+        self.gamma = gamma
+        return {'pis_dict': pis_dict, 'Nk': Nk, 'means': means, 'cov': cov, 'gamma': gamma}
 
-            cov = [
-                np.sum(
-                    [gamma[i, k] * np.outer(X_array[i, :] - means[k], X_array[i, :] - means[k])
-                     for i in range(n_rows)],
-                    axis=0
-                ) / Nk[k] + epsilon * np.eye(n_cols)
-                for k in range(self.K)
-            ]
+    def fit_fast(self, X):
+        epsilon = 1e-6
+        X_array = X.to_numpy()
+        n_rows, n_cols = X.shape
+
+        means = X.sample(n=self.K).to_numpy()
+        shared_cov = np.cov(X_array, rowvar=False, ddof=1)
+        cov = [shared_cov.copy() for _ in range(self.K)]
+        pis = [1 / self.K] * self.K
+        gamma = np.zeros((n_rows, self.K))
+
+        pis_dict = {'Initial': [pis.copy()]}
+        pis_dict.update({f'Iteration_{i}': [] for i in range(self.num_iterations)})
+
+        for iter in range(self.num_iterations):
+            # Vectorized E-step
+            log_pdf_matrix = np.zeros((n_rows, self.K))
+            for k in range(self.K):
+                rv = multivariate_normal(mean=means[k], cov=cov[k], allow_singular=self.allow_singular)
+                log_pdf_matrix[:, k] = np.log(pis[k] + 1e-12) + rv.logpdf(X_array)
+
+            max_log = np.max(log_pdf_matrix, axis=1, keepdims=True)
+            log_gamma = log_pdf_matrix - max_log
+            gamma = np.exp(log_gamma)
+            gamma /= gamma.sum(axis=1, keepdims=True)
+
+            # M-step
+            Nk = [np.sum(gamma[:, j]) for j in range(self.K)]
+
+            means = [np.sum(gamma[:, k][:, np.newaxis] * X_array,axis=0) / Nk[k]for k in range(self.K)]
+
+            cov = [np.sum(gamma[:, k][:, np.newaxis, np.newaxis] *(X_array - means[k])[:, :, np.newaxis] @ (X_array - means[k])[:, np.newaxis, :],axis=0) / Nk[k] + epsilon * np.eye(n_cols) for k in range(self.K)]
 
             pis = np.array(Nk) / n_rows
             pis_dict[f'Iteration_{iter}'].append(pis.copy())
 
-        return {'pis_dict': pis_dict, 'Nk': Nk, 'means': means, 'cov': cov}
+        self.gamma = gamma
+
+        return {'pis_dict': pis_dict, 'Nk': Nk, 'means': means, 'cov': cov, 'gamma': gamma}
