@@ -1,10 +1,10 @@
-# 📚 Unsupervised Author Text Analysis
+# Unsupervised Author Text Analysis
 
 This project applies a variety of unsupervised machine learning techniques to analyze and cluster book chapters written by four English-language authors. The goal is to uncover structure in the data and identify meaningful patterns in word usage without using author labels during training.
 
 ---
 
-## 🧠 Problem Overview
+## Problem Overview
 
 The dataset consists of word count vectors from book chapters by four authors. Common stop words are treated as features. The problem is tackled through several stages:
 
@@ -15,7 +15,7 @@ The dataset consists of word count vectors from book chapters by four authors. C
 
 ---
 
-## 📦 Dataset
+## Dataset
 
 - 📁 Source: [clustRviz GitHub Repo](https://github.com/DataSlingers/clustRviz/tree/master/data)
 - 📄 File: `authors.rda`
@@ -23,9 +23,9 @@ The dataset consists of word count vectors from book chapters by four authors. C
 
 ---
 
-## 🔧 Techniques Used
+## Techniques Used
 
-### 🔹 Dimensionality Reduction
+### 📍 Dimensionality Reduction
 
 - Principal Component Analysis (PCA)
 - Non-negative Matrix Factorization (NMF)
@@ -34,14 +34,14 @@ The dataset consists of word count vectors from book chapters by four authors. C
 - Uniform Manifold Approximation and Projection (UMAP)
 - Biclustering
 
-### 🔹 Clustering Algorithms
+### 📍 Clustering Algorithms
 
 - K-Means Clustering
 - Hierarchical Clustering (various linkages and distances)
 - Gaussian Mixture Models (GMM)
 - Spectral Clustering
 
-### 🔹 Pattern Recognition & Validation
+### 📍 Pattern Recognition & Validation
 
 - Identification of discriminative word features
 - Evaluation of clustering stability and generalizability
@@ -50,7 +50,7 @@ The dataset consists of word count vectors from book chapters by four authors. C
 
 ---
 
-## 📊 Deliverables
+## Deliverables
 
 - Visual summaries of both observations and features
 - Cluster assignment plots with true label comparisons
@@ -59,7 +59,7 @@ The dataset consists of word count vectors from book chapters by four authors. C
 
 ---
 
-## 🧪 Requirements
+## Requirements
 
 - Python 3.8+
 - `numpy`, `pandas`, `scikit-learn`, `matplotlib`, `seaborn`, `pyreadr`, `umap-learn`
