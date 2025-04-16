@@ -19,7 +19,7 @@ The dataset consists of word count vectors from book chapters by four authors. C
 
 - 📁 Source: [clustRviz GitHub Repo](https://github.com/DataSlingers/clustRviz/tree/master/data)
 - 📄 File: `authors.rda`
-- 🎯 Description: Word count data for stop words in chapters, with ground-truth author labels (used only for validation). 
+- 🎯 Description: Word count data for stop words in chapters, with ground-truth author labels (used only for validation).
 
 ---
 
