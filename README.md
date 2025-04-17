@@ -1,3 +1,5 @@
+![Word Cloud](https://github.com/dimitris-markopoulos/latent-semantic-clustering/blob/main/Media/viz/01/01_word_cloud.png?raw=true)
+
 # Unsupervised Author Text Analysis
 
 This project applies a variety of unsupervised machine learning techniques to analyze and cluster book chapters written by four English-language authors. The goal is to uncover structure in the data and identify meaningful patterns in word usage without using author labels during training.
